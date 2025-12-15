@@ -2,6 +2,14 @@
 
 本仓库基于 **OpenStack Horizon** 二次开发，新增 **“自定义报表（Custom Reports）”** Dashboard 模块，用于对计算/存储/网络等资源进行可视化展示、配额使用率分析与历史趋势查看，提升运维观测与管理效率。
 
+## 项目定位
+
+本项目面向 **DevStack/测试环境** 的演示与二次开发学习，重点展示：
+
+- Horizon Dashboard 扩展（新增 dashboard + panel + templates/static）
+- 资源数据采集与持久化（快照/历史趋势）
+- 运维可视化报表能力（配额与使用量、趋势分析）
+
 ## 功能概览
 
 - 资源概览
@@ -34,6 +42,25 @@
 详细步骤请直接看：
 
 - `horizon部署文档.md`
+
+## 配置（公开仓库规范）
+
+为避免提交本地敏感配置：
+
+- 仓库内保留示例：`openstack_dashboard/local/local_settings.py.example`
+- 真实环境配置：`openstack_dashboard/local/local_settings.py`（本地创建，不提交）
+
+自定义报表相关关键环境变量（示例）：
+
+```bash
+export OPENSTACK_HOST=127.0.0.1
+export OPENSTACK_KEYSTONE_URL=http://127.0.0.1/identity/v3
+
+export HORIZON_CUSTOM_DB_HOST=127.0.0.1
+export HORIZON_CUSTOM_DB_PORT=3306
+export HORIZON_CUSTOM_DB_USER=root
+export HORIZON_CUSTOM_DB_PASSWORD=<your_password>
+```
 
 ## 访问入口
 
