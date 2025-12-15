@@ -33,6 +33,15 @@
 - `horizon部署文档.md`
   - 部署、迁移、静态文件收集、验证与排障流程
 
+## 我在这个仓库里做了什么（面试/作品集重点）
+
+说明：本仓库包含 **上游 Horizon 的完整历史**，因此 GitHub Contributors 数量较多是正常现象。以下是我实现与维护的核心内容：
+
+- **自定义报表 Dashboard 模块**：`openstack_dashboard/dashboards/custom_reports/`
+- **Dashboard 启用入口**：`openstack_dashboard/enabled/_60_custom_reports.py`
+- **部署与验证文档**：`horizon部署文档.md`
+- **示例配置**：`openstack_dashboard/local/local_settings.py.example`（真实 `local_settings.py` 仅本地使用，不提交）
+
 ## 快速开始（DevStack 环境）
 
 1. 安装 DevStack 并确保 Horizon 可访问。
