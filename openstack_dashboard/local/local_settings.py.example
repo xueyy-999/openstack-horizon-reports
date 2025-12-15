@@ -384,3 +384,28 @@ SECURITY_GROUP_RULES = {
 # Help URL can be made available for the client. To provide a help URL, edit the
 # following attribute to the URL of your choice.
 #HORIZON_CONFIG["help_url"] = "http://openstack.mycompany.org"
+
+WEBROOT = "/dashboard/"
+COMPRESS_OFFLINE = True
+OPENSTACK_KEYSTONE_DEFAULT_ROLE = "member"
+OPENSTACK_HOST = os.environ.get("OPENSTACK_HOST", "127.0.0.1")
+OPENSTACK_KEYSTONE_URL = os.environ.get(
+    "OPENSTACK_KEYSTONE_URL",
+    f"http://{OPENSTACK_HOST}/identity/v3",
+)
+ALLOWED_HOSTS = ["*"]
+
+# 自定义报表使用的数据库配置（复用 devstack MySQL）
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'horizon_custom',
+        'USER': os.environ.get('HORIZON_CUSTOM_DB_USER', 'root'),
+        'PASSWORD': os.environ.get('HORIZON_CUSTOM_DB_PASSWORD', ''),
+        'HOST': os.environ.get('HORIZON_CUSTOM_DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('HORIZON_CUSTOM_DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
+    }
+}
