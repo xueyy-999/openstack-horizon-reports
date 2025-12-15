@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "综合资源概览" %}{% endblock %}
+
+{% block css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'custom_reports/css/reports.css' %}" type="text/css">
+  <style>
+    .resource-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .resource-card h5 {
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 0.5rem;
+    }
+    .resource-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .resource-item:last-child {
+      border-bottom: none;
+    }
+    .resource-label {
+      font-weight: 500;
+      color: #555;
+    }
+    .resource-value {
+      font-weight: 600;
+      color: #007bff;
+    }
+    .health-warning {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .health-warning-item {
+      padding: 0.5rem;
+      margin: 0.25rem 0;
+      background: #fff;
+      border-left: 3px solid #ffc107;
+      padding-left: 1rem;
+    }
+    .instance-table {
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .instance-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      padding: 0.75rem;
+      border-bottom: 2px solid #dee2e6;
+    }
+    .instance-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .instance-table tr:hover {
+      background: #f8f9fa;
+    }
+    .status-active {
+      color: #28a745;
+      font-weight: 600;
+    }
+    .status-shutoff {
+      color: #6c757d;
+    }
+    .status-error {
+      color: #dc3545;
+      font-weight: 600;
+    }
+    .chart-row {
+      margin-top: 2rem;
+    }
+    .small-chart-container {
+      max-height: 300px;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+  </style>
+{% endblock %}
+
+{% block page_header %}
+  {% include "horizon/common/_domain_page_header.html" with title=_("综合资源概览") %}
+{% endblock page_header %}
+
+{% block main %}
+<div class="row">
+  <div class="col-sm-12">
+    {% if has_data %}
+      
+      <!-- 健康度预警 -->
+      {% if health_warnings %}
+      <div class="health-warning">
+        <h5><i class="fa fa-exclamation-triangle"></i> {% trans "资源使用预警" %}</h5>
+        {% for warning in health_warnings %}
+        <div class="health-warning-item">
+          {{ warning }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      <!-- 综合资源概览卡片 -->
+      <div class="row">
+        <!-- 计算资源 -->
+        {% if compute_data %}
+        <div class="col-lg-4 col-md-6">
+          <div class="resource-card">
+            <h5><i class="fa fa-server"></i> {% trans "计算资源" %}</h5>
+            <div class="resource-item">
+              <span class="resource-label">{% trans "实例" %}</span>
+              <span class="resource-value">{{ compute_data.instances.used }} / {{ compute_data.instances.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-primary" style="width: {{ compute_data.instances.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "CPU 核心" %}</span>
+              <span class="resource-value">{{ compute_data.cores.used }} / {{ compute_data.cores.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-info" style="width: {{ compute_data.cores.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "内存 (MB)" %}</span>
+              <span class="resource-value">{{ compute_data.ram.used }} / {{ compute_data.ram.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-success" style="width: {{ compute_data.ram.percent }}%"></div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 存储资源 -->
+        {% if storage_data %}
+        <div class="col-lg-4 col-md-6">
+          <div class="resource-card">
+            <h5><i class="fa fa-hdd-o"></i> {% trans "存储资源" %}</h5>
+            <div class="resource-item">
+              <span class="resource-label">{% trans "卷数量" %}</span>
+              <span class="resource-value">{{ storage_data.volumes.used }} / {{ storage_data.volumes.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-warning" style="width: {{ storage_data.volumes.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "存储空间 (GB)" %}</span>
+              <span class="resource-value">{{ storage_data.gigabytes.used }} / {{ storage_data.gigabytes.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-warning" style="width: {{ storage_data.gigabytes.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "快照" %}</span>
+              <span class="resource-value">{{ storage_data.snapshots.used }} / {{ storage_data.snapshots.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-warning" style="width: {{ storage_data.snapshots.percent }}%"></div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 网络资源 -->
+        {% if network_data %}
+        <div class="col-lg-4 col-md-6">
+          <div class="resource-card">
+            <h5><i class="fa fa-globe"></i> {% trans "网络资源" %}</h5>
+            <div class="resource-item">
+              <span class="resource-label">{% trans "网络" %}</span>
+              <span class="resource-value">{{ network_data.networks.used }} / {{ network_data.networks.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-danger" style="width: {{ network_data.networks.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "浮动IP" %}</span>
+              <span class="resource-value">{{ network_data.floatingips.used }} / {{ network_data.floatingips.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-danger" style="width: {{ network_data.floatingips.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "路由器" %}</span>
+              <span class="resource-value">{{ network_data.routers.used }} / {{ network_data.routers.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-danger" style="width: {{ network_data.routers.percent }}%"></div>
+            </div>
+            
+            <div class="resource-item">
+              <span class="resource-label">{% trans "安全组" %}</span>
+              <span class="resource-value">{{ network_data.security_groups.used }} / {{ network_data.security_groups.limit }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-danger" style="width: {{ network_data.security_groups.percent }}%"></div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- 历史趋势图表 -->
+      {% include "custom_reports/comprehensive_overview/_trend_charts.html" %}
+
+      <!-- 可视化图表 -->
+      <div class="row chart-row">
+        <div class="col-lg-6">
+          <div class="small-chart-container">
+            <h6 class="text-center">{% trans "资源配额使用率对比" %}</h6>
+            <canvas id="quotaComparisonChart"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="small-chart-container">
+            <h6 class="text-center">{% trans "资源分类占用" %}</h6>
+            <canvas id="resourceTypeChart"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 实例资源详情表 -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="resource-card">
+            <h5><i class="fa fa-list"></i> {% trans "实例资源占用详情" %}</h5>
+            
+            {% if instance_details %}
+            <div class="table-responsive">
+              <table class="instance-table table table-striped">
+                <thead>
+                  <tr>
+                    <th>{% trans "实例名称" %}</th>
+                    <th>{% trans "状态" %}</th>
+                    <th>{% trans "CPU 核心" %}</th>
+                    <th>{% trans "内存 (MB)" %}</th>
+                    <th>{% trans "磁盘 (GB)" %}</th>
+                    <th>{% trans "运行时长" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for instance in instance_details %}
+                  <tr>
+                    <td><strong>{{ instance.name }}</strong></td>
+                    <td>
+                      <span class="status-{{ instance.status|lower }}">
+                        {{ instance.status }}
+                      </span>
+                    </td>
+                    <td>{{ instance.vcpus }}</td>
+                    <td>{{ instance.ram }}</td>
+                    <td>{{ instance.disk }}</td>
+                    <td>{{ instance.uptime }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td colspan="2">{% trans "总计" %}</td>
+                    <td>{{ compute_data.cores.used }} {% trans "核心" %}</td>
+                    <td>{{ compute_data.ram.used }} MB</td>
+                    <td>-</td>
+                    <td>{{ instance_details|length }} {% trans "个实例" %}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center" style="padding: 2rem;">
+              {% trans "当前没有运行的实例" %}
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- 优化建议 -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="alert alert-info">
+            <h6><i class="fa fa-lightbulb-o"></i> {% trans "资源优化建议：" %}</h6>
+            <ul>
+              <li>{% trans "定期检查并清理未使用的资源（关闭的实例、未挂载的卷、未使用的浮动IP）" %}</li>
+              <li>{% trans "当配额使用率超过80%时，提前申请扩容避免影响业务" %}</li>
+              <li>{% trans "合理规划实例规格，避免资源浪费" %}</li>
+              <li>{% trans "使用快照功能定期备份重要数据" %}</li>
+              <li>{% trans "监控长期运行的实例，评估是否需要优化或下线" %}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+    {% else %}
+      <div class="alert alert-warning">
+        <h4>{% trans "无数据可用" %}</h4>
+        <p>{{ error_message|default:_("无法获取资源数据。") }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if has_data %}
+document.addEventListener('DOMContentLoaded', function() {
+    // 配额使用率对比图（柱状图）
+    const ctx1 = document.getElementById('quotaComparisonChart');
+    if (ctx1) {
+        new Chart(ctx1.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [
+                    '{% trans "实例" %}', '{% trans "CPU核心" %}', '{% trans "内存" %}',
+                    '{% trans "存储卷" %}', '{% trans "存储空间" %}',
+                    '{% trans "浮动IP" %}', '{% trans "网络" %}'
+                ],
+                datasets: [{
+                    label: '{% trans "使用率 (%)" %}',
+                    data: [
+                        {% if compute_data %}{{ compute_data.instances.percent }}, {{ compute_data.cores.percent }}, {{ compute_data.ram.percent }}{% else %}0, 0, 0{% endif %},
+                        {% if storage_data %}{{ storage_data.volumes.percent }}, {{ storage_data.gigabytes.percent }}{% else %}0, 0{% endif %},
+                        {% if network_data %}{{ network_data.floatingips.percent }}, {{ network_data.networks.percent }}{% else %}0, 0{% endif %}
+                    ],
+                    backgroundColor: function(context) {
+                        const value = context.parsed.y;
+                        if (value > 80) return '#dc3545';  // 红色：超过80%
+                        if (value > 60) return '#ffc107';  // 黄色：60-80%
+                        return '#28a745';  // 绿色：60%以下
+                    },
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // 资源分类占用图（环形图）
+    const ctx2 = document.getElementById('resourceTypeChart');
+    if (ctx2) {
+        new Chart(ctx2.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['{% trans "计算资源" %}', '{% trans "存储资源" %}', '{% trans "网络资源" %}'],
+                datasets: [{
+                    data: [
+                        {% if compute_data %}{{ compute_data.instances.used }}{% else %}0{% endif %},
+                        {% if storage_data %}{{ storage_data.volumes.used }}{% else %}0{% endif %},
+                        {% if network_data %}{{ network_data.networks.used }}{% else %}0{% endif %}
+                    ],
+                    backgroundColor: ['#007bff', '#ffc107', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            boxWidth: 15
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
+

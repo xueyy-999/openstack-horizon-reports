@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "资源使用报告" %}{% endblock %}
+
+{% block css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'custom_reports/css/reports.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_header %}
+  {% include "horizon/common/_domain_page_header.html" with title=_("资源使用报告") %}
+{% endblock page_header %}
+
+{% block main %}
+<div class="row">
+  <div class="col-sm-12">
+    {% if has_data %}
+      <div class="info detail">
+        <h4>{% trans "项目资源使用概览" %}</h4>
+        <hr class="header_rule">
+        
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="quota-summary">
+              <h5>{% trans "计算实例" %}</h5>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" 
+                     style="width: {% widthratio quota_data.compute.instances.used quota_data.compute.instances.limit 100 %}%"
+                     aria-valuenow="{{ quota_data.compute.instances.used }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="{{ quota_data.compute.instances.limit }}">
+                </div>
+              </div>
+              <p>{{ quota_data.compute.instances.used }} / {{ quota_data.compute.instances.limit }} {% trans "个实例" %}</p>
+            </div>
+          </div>
+          
+          <div class="col-lg-4 col-md-6">
+            <div class="quota-summary">
+              <h5>{% trans "CPU 核心" %}</h5>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" 
+                     style="width: {% widthratio quota_data.compute.cores.used quota_data.compute.cores.limit 100 %}%"
+                     aria-valuenow="{{ quota_data.compute.cores.used }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="{{ quota_data.compute.cores.limit }}">
+                </div>
+              </div>
+              <p>{{ quota_data.compute.cores.used }} / {{ quota_data.compute.cores.limit }} {% trans "个核心" %}</p>
+            </div>
+          </div>
+          
+          <div class="col-lg-4 col-md-6">
+            <div class="quota-summary">
+              <h5>{% trans "内存 (MB)" %}</h5>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" 
+                     style="width: {% widthratio quota_data.compute.ram.used quota_data.compute.ram.limit 100 %}%"
+                     aria-valuenow="{{ quota_data.compute.ram.used }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="{{ quota_data.compute.ram.limit }}">
+                </div>
+              </div>
+              <p>{{ quota_data.compute.ram.used }} / {{ quota_data.compute.ram.limit }} MB</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mt-4">
+          <div class="col-lg-8 col-md-10 col-sm-12 mx-auto">
+            <div class="chart-container">
+              <canvas id="resourceChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="alert alert-info">
+              <h6>{% trans "使用提示：" %}</h6>
+              <ul>
+                <li>{% trans "定期监控资源使用情况，避免达到配额上限" %}</li>
+                <li>{% trans "如果持续接近配额上限，考虑申请扩容" %}</li>
+                <li>{% trans "清理未使用的实例以释放资源" %}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-warning">
+        <h4>{% trans "无数据可用" %}</h4>
+        <p>{{ error_message|default:_("无法获取资源使用数据。") }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if has_data %}
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('resourceChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['{% trans "已用实例" %}', '{% trans "可用实例" %}', 
+                     '{% trans "已用核心" %}', '{% trans "可用核心" %}'],
+            datasets: [{
+                data: [
+                    {{ quota_data.compute.instances.used }},
+                    {{ quota_data.compute.instances.limit }} - {{ quota_data.compute.instances.used }},
+                    {{ quota_data.compute.cores.used }},
+                    {{ quota_data.compute.cores.limit }} - {{ quota_data.compute.cores.used }}
+                ],
+                backgroundColor: [
+                    '#FF6384',
+                    '#FFE6E6',
+                    '#36A2EB', 
+                    '#E6F3FF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '{% trans "资源使用分布" %}',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 15,
+                        padding: 15
+                    }
+                }
+            }
+        }
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

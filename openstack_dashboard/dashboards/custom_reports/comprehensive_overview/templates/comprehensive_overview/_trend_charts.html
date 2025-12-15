@@ -1,0 +1,160 @@
+{% load i18n %}
+
+{% if has_history %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">{% trans "最近7天资源使用趋势" %}</h3>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h4>{% trans "实例数量趋势" %}</h4>
+              <canvas id="instancesChart" width="400" height="200"></canvas>
+            </div>
+            <div class="col-md-6">
+              <h4>{% trans "vCPU 使用趋势" %}</h4>
+              <canvas id="coresChart" width="400" height="200"></canvas>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 30px;">
+            <div class="col-md-6">
+              <h4>{% trans "内存使用趋势 (MB)" %}</h4>
+              <canvas id="ramChart" width="400" height="200"></canvas>
+            </div>
+            <div class="col-md-6">
+              <h4>{% trans "存储使用趋势 (GB)" %}</h4>
+              <canvas id="storageChart" width="400" height="200"></canvas>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 20px;">
+            <div class="col-md-12 text-center">
+              <a href="{% url 'horizon:custom_reports:comprehensive_overview:history' %}" class="btn btn-primary">
+                {% trans "查看详细历史分析" %}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{{ trend_data|json_script:"trend-data" }}
+<script>
+// 获取趋势数据
+var trendData = JSON.parse(document.getElementById('trend-data').textContent);
+
+// 实例图表
+new Chart(document.getElementById('instancesChart'), {
+  type: 'line',
+  data: {
+    labels: trendData.dates,
+    datasets: [{
+      label: '{% trans "实例数量" %}',
+      data: trendData.instances,
+      borderColor: 'rgb(75, 192, 192)',
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      tension: 0.1
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+// vCPU 图表
+new Chart(document.getElementById('coresChart'), {
+  type: 'line',
+  data: {
+    labels: trendData.dates,
+    datasets: [{
+      label: '{% trans "vCPU 数量" %}',
+      data: trendData.cores,
+      borderColor: 'rgb(54, 162, 235)',
+      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+      tension: 0.1
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+// 内存图表
+new Chart(document.getElementById('ramChart'), {
+  type: 'line',
+  data: {
+    labels: trendData.dates,
+    datasets: [{
+      label: '{% trans "内存 (MB)" %}',
+      data: trendData.ram,
+      borderColor: 'rgb(255, 99, 132)',
+      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      tension: 0.1
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+// 存储图表
+new Chart(document.getElementById('storageChart'), {
+  type: 'line',
+  data: {
+    labels: trendData.dates,
+    datasets: [{
+      label: '{% trans "存储 (GB)" %}',
+      data: trendData.gigabytes,
+      borderColor: 'rgb(75, 192, 75)',
+      backgroundColor: 'rgba(75, 192, 75, 0.2)',
+      tension: 0.1
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+</script>
+{% else %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i>
+        {% trans "暂无历史数据，访问本页面几次后将自动收集并展示趋势图表。" %}
+        <br>
+        {% trans "或点击" %}
+        <a href="{% url 'horizon:custom_reports:comprehensive_overview:history' %}">
+          {% trans "查看详细历史分析" %}
+        </a>
+        {% trans "页面查看更多信息。" %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
